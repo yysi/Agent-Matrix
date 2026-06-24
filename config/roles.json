@@ -1,0 +1,9 @@
+{
+  "designer": {
+    "name": "设计师",
+    "icon": "🎨",
+    "description": "UI/UX 设计",
+    "requiredCapabilities": [],
+    "preferredCapabilities": []
+  }
+}

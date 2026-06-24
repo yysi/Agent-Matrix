@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Matrix</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+</head>
+<body>
+
+    <!-- ====== Header ====== -->
+    <header>
+        <div class="header-left">
+            <h1>Agent Matrix</h1>
+            <span class="badge badge-agent"><span id="agent-count">0</span> Agents</span>
+            <span class="badge badge-task"><span id="task-count">0</span> Tasks</span>
+        </div>
+        <div class="header-right">
+            <span class="connection" id="connection-status">● 连接中...</span>
+        </div>
+    </header>
+
+    <!-- ====== Main Layout ====== -->
+    <div class="layout">
+
+        <!-- ====== Left: Chat Panel ====== -->
+        <div class="panel-chat">
+            <!-- Chat Header -->
+            <div class="chat-top">
+                <div class="chat-tabs" id="channel-tabs">
+                    <button class="tab active" data-channel="general" onclick="switchChannel('general')">💬 讨论</button>
+                    <button class="tab" data-channel="architecture" onclick="switchChannel('architecture')">📐 架构</button>
+                    <button class="tab" data-channel="development" onclick="switchChannel('development')">💻 开发</button>
+                    <button class="tab" data-channel="research" onclick="switchChannel('research')">🔬 研究</button>
+                    <button class="tab" data-channel="testing" onclick="switchChannel('testing')">🧪 测试</button>
+                </div>
+            </div>
+
+            <!-- Participants -->
+            <div class="chat-participants" id="chat-participants"></div>
+
+            <!-- Messages -->
+            <div class="chat-messages" id="chat-messages">
+                <div class="empty-state">
+                    <div class="empty-icon">💬</div>
+                    <p>暂无消息</p>
+                    <span class="empty-hint">输入指令开始与 Agent 对话</span>
+                </div>
+            </div>
+
+            <!-- Input -->
+            <div class="chat-input">
+                <input type="text" id="message-input"
+                       placeholder="输入指令，@agent 可定向发送..."
+                       onkeypress="handleKeyPress(event)"
+                       autofocus>
+                <select id="message-type">
+                    <option value="discussion">💬 讨论</option>
+                    <option value="task">📋 任务</option>
+                    <option value="question">❓ 提问</option>
+                </select>
+                <button class="btn btn-primary" onclick="sendAdminMessage()">发送</button>
+            </div>
+        </div>
+
+        <!-- ====== Right: Sidebar ====== -->
+        <div class="panel-sidebar">
+
+            <!-- Tab Bar -->
+            <div class="sidebar-tabs">
+                <button class="tab active" data-panel="agents" onclick="switchPanel('agents')">🤖 Agents</button>
+                <button class="tab" data-panel="tasks" onclick="switchPanel('tasks')">📋 任务</button>
+                <button class="tab" data-panel="roles" onclick="switchPanel('roles')">🎭 角色</button>
+                <button class="tab" data-panel="logs" onclick="switchPanel('logs')">📊 日志</button>
+            </div>
+
+            <!-- ====== Agents Panel ====== -->
+            <div class="sidebar-content active" id="panel-agents">
+                <div class="panel-toolbar">
+                    <span class="panel-title">已注册 Agent</span>
+                    <div class="toolbar-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="discoverAgents()">🔍 扫描</button>
+                        <button class="btn btn-ghost btn-sm" onclick="showAgentModal()">+ 添加</button>
+                        <button class="btn btn-ghost btn-sm" onclick="testAllAgents()">🔌 检测</button>
+                        <button class="btn btn-ghost btn-sm" onclick="recommendRoles()">💡 推荐</button>
+                    </div>
+                </div>
+                <div class="agents-list" id="agents-grid"></div>
+            </div>
+
+            <!-- ====== Tasks Panel ====== -->
+            <div class="sidebar-content" id="panel-tasks">
+                <div class="panel-toolbar">
+                    <span class="panel-title">任务列表</span>
+                    <div class="toolbar-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="clearAllTasks()">清空</button>
+                        <button class="btn btn-primary btn-sm" onclick="showNewTaskModal()">+ 新任务</button>
+                    </div>
+                </div>
+                <div class="tasks-list" id="tasks-list"></div>
+            </div>
+
+            <!-- ====== Roles Panel ====== -->
+            <div class="sidebar-content" id="panel-roles">
+                <div class="panel-toolbar">
+                    <span class="panel-title">角色定义</span>
+                    <div class="toolbar-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="showRoleModal()">+ 新建</button>
+                    </div>
+                </div>
+                <div class="roles-grid" id="roles-grid"></div>
+            </div>
+
+            <!-- ====== Logs Panel ====== -->
+            <div class="sidebar-content" id="panel-logs">
+                <div class="panel-toolbar">
+                    <span class="panel-title">实时日志</span>
+                </div>
+                <div class="logs-list" id="logs-container"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ====== New Task Modal ====== -->
+    <div class="modal" id="new-task-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建新任务</h3>
+                <button class="close-btn" onclick="hideNewTaskModal()">&times;</button>
+            </div>
+            <form id="new-task-form">
+                <div class="form-group">
+                    <label>任务名称</label>
+                    <input type="text" id="task-name" required placeholder="例如：天气应用">
+                </div>
+                <div class="form-group">
+                    <label>需求描述</label>
+                    <textarea id="task-requirement" rows="4" required placeholder="详细描述需求..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-ghost" onclick="hideNewTaskModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">创建并执行</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====== Role Modal ====== -->
+    <div class="modal" id="role-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="role-modal-title">新建角色</h3>
+                <button class="close-btn" onclick="hideRoleModal()">&times;</button>
+            </div>
+            <form id="role-form">
+                <input type="hidden" id="role-edit-id">
+                <div class="form-group">
+                    <label>角色 ID</label>
+                    <input type="text" id="role-id" required placeholder="例如：designer">
+                </div>
+                <div class="form-group">
+                    <label>名称</label>
+                    <input type="text" id="role-name" required placeholder="例如：设计师">
+                </div>
+                <div class="form-group">
+                    <label>图标（emoji）</label>
+                    <input type="text" id="role-icon" placeholder="🎨" value="🎭">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <input type="text" id="role-desc" placeholder="角色职责描述">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-ghost" onclick="hideRoleModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====== Agent Modal ====== -->
+    <div class="modal" id="agent-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加自定义 Agent</h3>
+                <button class="close-btn" onclick="hideAgentModal()">&times;</button>
+            </div>
+            <form id="agent-form">
+                <div class="form-group">
+                    <label>命令 <span style="color:#8b949e">（系统中可执行的 CLI 命令）</span></label>
+                    <input type="text" id="agent-command" required placeholder="例如：python3 -m my_agent">
+                </div>
+                <div class="form-group">
+                    <label>显示名称</label>
+                    <input type="text" id="agent-name" placeholder="留空则使用命令名">
+                </div>
+                <div class="form-group">
+                    <label>角色</label>
+                    <select id="agent-role"></select>
+                </div>
+                <div class="form-group">
+                    <label>自定义提示词</label>
+                    <textarea id="agent-prompt" rows="4" placeholder="选填。自定义系统提示词，覆盖角色默认模板。例如：你是一个 Python 脚本助手，只返回可执行的代码。"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>图标</label>
+                    <input type="text" id="agent-emoji" placeholder="🔧" value="🔧">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-ghost" onclick="hideAgentModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

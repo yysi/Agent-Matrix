@@ -1,0 +1,23 @@
+{
+  "name": "agent-matrix",
+  "version": "1.0.0",
+  "description": "多 Agent 协作矩阵 - 独立运行工具",
+  "main": "core/index.js",
+  "bin": {
+    "agent-matrix": "./bin/agent-matrix"
+  },
+  "scripts": {
+    "start": "node web/server.js",
+    "dev": "nodemon web/server.js",
+    "discover": "node core/discover.js",
+    "status": "node core/status.js"
+  },
+  "keywords": ["agent", "multi-agent", "ai", "matrix"],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  }
+}
