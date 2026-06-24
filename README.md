@@ -178,3 +178,5 @@ MIT
 ---
 
 > 💡 **提示**：确保你的 Agent CLI 已加入系统 PATH。启动后在 Dashboard 点击 "🔍 扫描" 即可自动发现。
+If this project looks useful to you, a ⭐ would really mean a lot — it helps others discover it too.
+
