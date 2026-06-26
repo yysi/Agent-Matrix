@@ -103,6 +103,20 @@ app.get('/api/agents/stats', (req, res) => {
   res.json(agentRegistry.getStats());
 });
 
+// ============ 全局协同开关 ============
+
+app.get('/api/collaboration', (req, res) => {
+  res.json({ enabled: agentChat.getCollaborationEnabled() });
+});
+
+app.post('/api/collaboration', (req, res) => {
+  const { enabled } = req.body;
+  if (typeof enabled !== 'boolean') return res.status(400).json({ error: 'enabled must be boolean' });
+  agentChat.setCollaborationEnabled(enabled);
+  io.emit('collaboration-toggle', enabled);
+  res.json({ enabled });
+});
+
 // ============ 每个 Agent 独立协同开关 ============
 
 /** 获取所有 Agent 的协同状态 */

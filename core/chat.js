@@ -34,6 +34,7 @@ class AgentChat {
     this.discussionQueue = [];
     this.isProcessingDiscussion = false;
     this.disabledAgents = new Set(); // 被禁用的 Agent ID（不参与协同讨论）
+    this.collaborationEnabled = true; // 全局协同开关
     this.loadChat();
   }
 
@@ -60,6 +61,15 @@ class AgentChat {
       lastUpdated: new Date().toISOString()
     };
     fs.writeFileSync(this.configPath, JSON.stringify(data, null, 2));
+  }
+
+  /** 获取全局协同开关 */
+  getCollaborationEnabled() { return this.collaborationEnabled; }
+
+  /** 设置全局协同开关 */
+  setCollaborationEnabled(val) {
+    this.collaborationEnabled = !!val;
+    return this.collaborationEnabled;
   }
 
   /** 获取 Agent 的协同状态 */

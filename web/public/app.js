@@ -150,17 +150,12 @@ function renderAgents() {
     return `
     <div class="agent-card ${agent.status} ${isEnabled ? '' : 'disabled'}">
       <div class="agent-avatar">${getAgentIcon(agent.id)}</div>
-      <div class="agent-info">
+<div class="agent-info">
         <div class="agent-name">
           ${agent.name}
-          <span class="agent-enabled-toggle ${isEnabled ? 'on' : 'off'}"
-                onclick="toggleAgentCollaboration('${agent.id}')"
-                title="${isEnabled ? '点击关闭协同' : '点击开启协同'}">
-            ${isEnabled ? '●' : '○'}
-          </span>
         </div>
         <div class="agent-meta">
-          ${agent.tool || '-'} · ${agent.model || '-'} · ${getCostText(agent.profile?.cost)}
+          ${roleObj ? roleObj.icon + ' ' + roleObj.name : agent.role} · ${agent.model || '-'}
         </div>
         ${agent.profile?.capabilities ? `<div class="agent-caps">${agent.profile.capabilities.map(cap => `<span class="cap-tag">${cap}</span>`).join('')}</div>` : ''}
         <div id="test-result-${agent.id}" class="test-result"></div>
@@ -1012,11 +1007,22 @@ function showToast(message, type = 'success') {
   setTimeout(() => toast.remove(), 3000);
 }
 
+// 协奏开关
+function toggleCollaboration(enabled) {
+  fetch('/api/collaboration', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ enabled })
+  }).then(r => r.json()).then(d => {
+    if (d.error) return showToast(d.error, 'error');
+    showToast(enabled ? '协奏模式已开启' : '协奏模式已关闭', 'info');
+  }).catch(() => {});
+}
+
 // 初始加载
 fetch('/api/agents').then(r => r.json()).then(d => { agents = d; renderAgents(); }).catch(() => {});
 fetch('/api/tasks').then(r => r.json()).then(d => { tasks = d; renderTasks(); }).catch(() => {});
 fetch('/api/roles').then(r => r.json()).then(d => { roles = d; renderRoles(); }).catch(() => {});
-fetch('/api/agents/collaboration').then(r => r.json()).then(d => {
-  agentCollaboration = d;
-  renderAgents();
+fetch('/api/collaboration').then(r => r.json()).then(d => {
+  document.getElementById('collab-toggle').checked = d.enabled;
 }).catch(() => {});
